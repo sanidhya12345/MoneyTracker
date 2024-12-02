@@ -1,72 +1,102 @@
 /** @format */
 
 import "./App.css";
+import { useEffect, useState } from "react";
 
 function App() {
+  const [name, setName] = useState("");
+  const [dateTime, setDateTime] = useState("");
+  const [description, setDescription] = useState("");
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    getTransactions().then(setTransactions);
+  }, []);
+
+  async function getTransactions() {
+    const url = "http://localhost:3001/api/transaction";
+    const response = await fetch(url);
+    return await response.json();
+  }
+
+  function addNewTransaction(event) {
+    event.preventDefault();
+    const url = "http://localhost:3001/api/transaction";
+    const price = name.split(" ")[0];
+    console.log(url);
+    fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        price,
+        name: name.substring(price.length + 1),
+        description,
+        dateTime,
+      }),
+    }).then((response) => {
+      response.json().then((json) => {
+        setName("");
+        setDateTime("");
+        setDescription("");
+        console.log("result", json);
+      });
+    });
+  }
+  let balance = 0;
+  for (const transaction of transactions) {
+    balance = balance + transaction.price;
+  }
   return (
     <main>
-      <h1>
-        400 <span>.000</span>
-      </h1>{" "}
-      <form>
+      <h1>{balance}</h1>
+
+      <form onSubmit={addNewTransaction}>
         <div className="basic">
-          <input type="text" placeholder={"20000 Mobile"} />
-          <input type="datetime-local"></input>
+          <input
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={"20000 mobile"}
+          />
+          <input
+            type="datetime-local"
+            value={dateTime}
+            onChange={(event) => setDateTime(event.target.value)}
+          />
         </div>
+
         <div className="description">
-          <input type="text" placeholder={"description"}></input>
+          <input
+            type="text"
+            placeholder={"description"}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
         </div>
         <button>Add new transaction</button>
       </form>
+
       <div className="transactions">
-        <div className="transaction">
-          <div className="left">
-            <div className="name">New Headphones</div>
-            <div className="description">
-              It was the time to buy new headphones , old were damaged
+        {transactions.length > 0 &&
+          transactions.map((transaction) => (
+            <div>
+              <div className="transaction">
+                <div className="left">
+                  <div className="name">{transaction.name}</div>
+                  <div className="description">{transaction.description}</div>
+                </div>
+                <div className="right">
+                  <div
+                    className={
+                      "price " + (transaction.price < 0 ? "red" : "green")
+                    }>
+                    {transaction.price}
+                  </div>
+                  <div className="datetime">{transaction.dateTime}</div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="right">
-            <div className="price red">3000</div>
-            <div className="datetime">01-2024</div>
-          </div>
-        </div>
-        <div className="transaction">
-          <div className="left">
-            <div className="name">New Headphones</div>
-            <div className="description">
-              It was the time to buy new headphones , old were damaged
-            </div>
-          </div>
-          <div className="right">
-            <div className="price green">3000</div>
-            <div className="datetime">01-2024</div>
-          </div>
-        </div>
-        <div className="transaction">
-          <div className="left">
-            <div className="name">New Headphones</div>
-            <div className="description">
-              It was the time to buy new headphones , old were damaged
-            </div>
-          </div>
-          <div className="right">
-            <div className="price red">3000</div>
-            <div className="datetime">01-2024</div>
-          </div>
-        </div>
-        <div className="transaction">
-          <div className="left">
-            <div className="name">New Headphones</div>
-            <div className="description">
-              It was the time to buy new headphones , old were damaged
-            </div>
-          </div>
-          <div className="right">
-            <div className="price green">3000</div>
-            <div className="datetime">01-2024</div>
-          </div>
-        </div>
+          ))}
       </div>
     </main>
   );
